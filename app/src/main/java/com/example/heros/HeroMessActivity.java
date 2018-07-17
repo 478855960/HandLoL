@@ -2,21 +2,18 @@ package com.example.heros;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.app.ActionBar.LayoutParams;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.Gallery;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.PopupWindow;
-import android.widget.TextView;
+import android.widget.*;
 
 import com.example.heros.adapter.SkillAdapter;
 import com.example.heros.bean.Hero;
@@ -41,6 +38,8 @@ public class HeroMessActivity extends Activity {
     Gallery gallerySkill=null;
     SkillAdapter adapter=null;
     Bitmap bitmap=null;
+    MediaController mediaController = null;
+    VideoView videoView = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +99,7 @@ public class HeroMessActivity extends Activity {
         tvHeroSkill = (TextView) findViewById(R.id.textview_Skill);
         buttonHeroDetial = (Button) findViewById(R.id.button_Detial);
         buttonHeroSkill = (Button) findViewById(R.id.button_Skill);
+        videoView = findViewById(R.id.hero_video);
         gallerySkill=(Gallery) findViewById(R.id.gallery_Skill);
         adapter = new SkillAdapter(hero.getSkills(), this);
         // 适配数据
@@ -183,6 +183,7 @@ public class HeroMessActivity extends Activity {
                 Skill skill = hero.getSkills().get(position);
                 String skillName= skill.getSkillName();
                 String skillDetial = getSkillByPath(skillName);
+                Log.i("IJKMEDIA: Input", hero.getName()+"_"+skillName.replaceAll("[/.]",""));
                 if(tvHeroSkill.getText() != null){
                     tvHeroSkill.setText(null);
                     tvHeroSkill.setText(skillDetial);
@@ -190,8 +191,21 @@ public class HeroMessActivity extends Activity {
                     tvHeroSkill.setText(skillDetial);
                 }
 
+                if(!videoView.isPlaying()){
+                    ivHeroBlogo.setVisibility(View.GONE);
+                    videoView.setVisibility(View.VISIBLE);
+                    playVideo(skillName.replaceAll("[/.]",""));
+                }
+
             }
 
+        });
+        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                ivHeroBlogo.setVisibility(View.VISIBLE);
+                videoView.setVisibility(View.GONE);
+            }
         });
         // 弹出popwindow
         ivHeroBlogo.setOnClickListener(new View.OnClickListener() {
@@ -231,5 +245,20 @@ public class HeroMessActivity extends Activity {
         if (s instanceof Hero) {
             hero = (Hero) s;
         }
+    }
+
+    private void playVideo(String videoname){
+        mediaController = new MediaController(this);
+        Log.i("tag", R.raw.search + "");
+        Resources res = getResources();
+        String packagename = getPackageName();
+        int resId = res.getIdentifier(videoname,"raw", packagename);
+        String url = "android.resource://" + packagename+ "/" + resId;
+        videoView.setVideoURI(Uri.parse(url));
+        videoView.setMediaController(mediaController);
+        mediaController.setMediaPlayer(videoView);
+        // videoView.requestFocus();
+        videoView.start();
+
     }
 }
