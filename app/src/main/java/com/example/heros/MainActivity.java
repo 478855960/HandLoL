@@ -1,6 +1,8 @@
 package com.example.heros;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -93,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
         initOnClickScroll();
         initSwipeRefresh();
     }
+
     /*刷新监听*/
     private void initSwipeRefresh() {
 //        srl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -222,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
         header.setImageLoader(new ImageLoader() {
             @Override
             public void displayImage(Context context, Object o, ImageView imageView) {
-                for(String url:img) {
+                for (String url : img) {
                     Picasso.with(context)
                             .load(url)
                             .into(imageView);

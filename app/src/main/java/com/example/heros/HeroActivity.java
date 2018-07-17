@@ -219,19 +219,8 @@ public class HeroActivity extends Activity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // 点击回退键，进行判断
         if (keyCode == KeyEvent.KEYCODE_BACK){
-            AlertDialog.Builder builder = new AlertDialog.Builder(HeroActivity.this);
-            builder.setTitle("系统提示");
-            builder.setMessage("确定要退出当前应用？");
-            builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    media.stop();
-                    finish();
-                }
-            });
-            builder.setNegativeButton("取消", null);
-            builder.create().show();
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
 
         }
         return super.onKeyDown(keyCode, event);
