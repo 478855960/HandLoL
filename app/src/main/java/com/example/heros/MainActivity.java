@@ -244,6 +244,7 @@ public class MainActivity extends AppCompatActivity {
             case R.id.title_bar_content:
                 Intent intent = new Intent(this, HeroActivity.class);
                 startActivity(intent);
+                Log.i("jmp", "jump");
                 break;
         }
     }

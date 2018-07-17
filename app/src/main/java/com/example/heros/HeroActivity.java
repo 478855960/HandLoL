@@ -56,6 +56,7 @@ public class HeroActivity extends Activity {
     }
 
     private void initialUI(){
+        media = new HeroMedia(this);
         gvLogo = (GridView) findViewById(R.id.gridview_logo);
         imgType = (ImageView)findViewById(R.id.imageviewDialog);
         buttonQuery = (Button) findViewById(R.id.buttonSousuo);
@@ -219,9 +220,7 @@ public class HeroActivity extends Activity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         // 点击回退键，进行判断
         if (keyCode == KeyEvent.KEYCODE_BACK){
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
-
+            media.stop();
         }
         return super.onKeyDown(keyCode, event);
     }

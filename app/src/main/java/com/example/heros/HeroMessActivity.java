@@ -40,6 +40,7 @@ public class HeroMessActivity extends Activity {
     Bitmap bitmap=null;
     MediaController mediaController = null;
     VideoView videoView = null;
+    ImageView skinBtn = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +92,7 @@ public class HeroMessActivity extends Activity {
 
     // 初始化控件
     private void initialUI() {
-
+        skinBtn = findViewById(R.id.hero_skin_btn);
         flDetial = (FrameLayout) findViewById(R.id.framelayout_Detial);
         llSkill = (LinearLayout) findViewById(R.id.linerlayout_Skill);
         ivHeroBlogo = (ImageView) findViewById(R.id.imageview_HeroMess);
@@ -191,11 +192,10 @@ public class HeroMessActivity extends Activity {
                     tvHeroSkill.setText(skillDetial);
                 }
 
-                if(!videoView.isPlaying()){
-                    ivHeroBlogo.setVisibility(View.GONE);
-                    videoView.setVisibility(View.VISIBLE);
-                    playVideo(skillName.replaceAll("[/.]",""));
-                }
+                ivHeroBlogo.setVisibility(View.GONE);
+                skinBtn.setVisibility(View.GONE);
+                videoView.setVisibility(View.VISIBLE);
+                playVideo(skillName.replaceAll("[/.]",""));
 
             }
 
@@ -204,6 +204,7 @@ public class HeroMessActivity extends Activity {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
                 ivHeroBlogo.setVisibility(View.VISIBLE);
+                skinBtn.setVisibility(View.VISIBLE);
                 videoView.setVisibility(View.GONE);
             }
         });
@@ -235,6 +236,15 @@ public class HeroMessActivity extends Activity {
                 });
             }
         });
+
+        skinBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(HeroMessActivity.this, SkinActivity.class);
+                intent.putExtra("curHero", hero);
+                startActivity(intent);
+            }
+        });
     }
 
     // 获取前一个activity传来的hero
@@ -247,6 +257,7 @@ public class HeroMessActivity extends Activity {
         }
     }
 
+    // 播放英雄技能视频
     private void playVideo(String videoname){
         mediaController = new MediaController(this);
         Log.i("tag", R.raw.search + "");
@@ -259,6 +270,5 @@ public class HeroMessActivity extends Activity {
         mediaController.setMediaPlayer(videoView);
         // videoView.requestFocus();
         videoView.start();
-
     }
 }
