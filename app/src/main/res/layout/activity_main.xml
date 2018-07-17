@@ -1,79 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="com.example.heros.MainActivity">
+    android:orientation="vertical">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal">
-        <TextView
-            android:layout_weight="3"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:text="掌上联盟"
-            android:textSize="30sp"
-            android:id="@+id/textviewHeader"
-            />
+        android:layout_height="match_parent">
 
-        <ImageView
-            android:id="@+id/imageviewPause"
-            android:layout_weight="1"
-            android:layout_width="0dp"
+        <com.cpoopc.scrollablelayoutlib.ScrollableLayout
+            android:id="@+id/scrollablelayout"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/pause"
-            android:visibility="gone"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
-            />
-        <ImageView
-            android:id="@+id/imageviewPlay"
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:src="@drawable/begin"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
-            />
-        <ImageView
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:id="@+id/imageviewDialog"
-            android:src="@drawable/s_akali"
-            />
-    </LinearLayout>
+            android:layout_marginTop="16dp"
+            android:orientation="vertical">
+            <!--header-->
+            <com.youth.banner.Banner
+                android:id="@+id/header"
+                android:layout_width="match_parent"
+                android:layout_height="200dp" />
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        >
-        <EditText
-            android:layout_weight="4"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:hint="请输入英雄名称"
-            android:id="@+id/edittextSousuo"
-            />
-        <Button
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:text="搜索"
-            android:id="@+id/buttonSousuo"
-            />
-    </LinearLayout>
+            <!--置顶的部分-->
+            <android.support.design.widget.TabLayout
+                android:id="@+id/tab"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@color/white" />
+            <!--滚动视图-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-    <GridView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:numColumns="3"
-        android:id="@+id/gridview_logo"
-        >
-    </GridView>
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:id="@+id/header_title"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="8dp"
+                    android:paddingRight="12dp"
+                    android:paddingLeft="12dp"
+                    android:paddingBottom="5dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/white"
+                        android:orientation="horizontal">
+                        <ImageView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:src="@drawable/header1"
+                            android:layout_alignParentTop="true"
+                            android:layout_alignParentStart="true" />
+
+
+                        <ImageView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:src="@drawable/header2"
+                            android:layout_height="match_parent"
+                            android:layout_alignParentBottom="true"
+                            android:layout_alignParentEnd="true" />
+
+                    </LinearLayout>
+
+                </RelativeLayout>
+                <android.support.v4.view.ViewPager
+                    android:id="@+id/vp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+            </LinearLayout>
+        </com.cpoopc.scrollablelayoutlib.ScrollableLayout>
+        <include layout="@layout/title_bar" />
+    </RelativeLayout>
+
 </LinearLayout>

@@ -1,239 +1,264 @@
 package com.example.heros;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
-import android.view.KeyEvent;
-import android.view.LayoutInflater;
+import android.os.Looper;
+import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.GridView;
+import android.view.WindowManager;
+import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
-import android.widget.ListView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
-import com.example.heros.adapter.HeroAdapter;
-import com.example.heros.bean.Hero;
-import com.example.heros.media.HeroMedia;
-import com.example.heros.util.XMLManager;
+import com.cpoopc.scrollablelayoutlib.ScrollableLayout;
+import com.squareup.picasso.Picasso;
+import com.youth.banner.Banner;
+import com.youth.banner.BannerConfig;
+import com.youth.banner.loader.ImageLoader;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends Activity {
-    GridView gvLogo;// 英雄头像
-    HeroAdapter adapter;
-    List<Hero> heros;// 保存英雄信息的集合
-    HeroThread thread;
-    ProgressDialog dialog; // 英雄分类弹框
-    ImageView imgType;
-    List<Hero> tempHeros;
-    Button buttonQuery = null; // 搜索按钮实现
-    EditText etQuery = null; // 输入框
-    ImageView imgPlay = null;// 音乐播放
-    ImageView imgPause = null;// 音乐暂停
-    HeroMedia media = null;
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+import butterknife.OnClick;
 
+public class MainActivity extends AppCompatActivity {
+
+
+    @InjectView(R.id.header)
+    Banner header;
+    @InjectView(R.id.tab)
+    TabLayout tab;
+    @InjectView(R.id.vp)
+    ViewPager vp;
+    @InjectView(R.id.scrollablelayout)
+    ScrollableLayout scrollablelayout;
+    @InjectView(R.id.title)
+    RelativeLayout title;
+    @InjectView(R.id.title_bar_back)
+    ImageView titleBarBack;
+    @InjectView(R.id.title_bar_title)
+    TextView titleBarTitle;
+    @InjectView(R.id.title_bar_content)
+    TextView titleBarContent;
+    @InjectView(R.id.header_title)
+    RelativeLayout headerTitle;
+    //    @InjectView(R.id.srl)
+//    SwipeRefreshLayout srl;
+    ScrollableFragment fragment;
+    private String[] titles = new String[]{"最新", "专栏", "官方", "活动", "攻略", "娱乐", "收藏"};
+
+    List<String> img = new ArrayList<>();
+    ViewPagerAdapter adapterVP;
+    List<Fragment> fragmentList = new ArrayList<>();
+    RelativeLayout relativeLayout;
+    //动画
+    TranslateAnimation mShowAction, mHiddenAction;
+    View headerView;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        initialUI();
-        // 创作启动工作线程
-        thread = new HeroThread();
-        thread.start();
-
-        setListener();
+        ButterKnife.inject(this);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        initView();
     }
 
-    private void initialUI(){
-        gvLogo = (GridView) findViewById(R.id.gridview_logo);
-        imgType = (ImageView)findViewById(R.id.imageviewDialog);
-        buttonQuery = (Button) findViewById(R.id.buttonSousuo);
-        etQuery = (EditText) findViewById(R.id.edittextSousuo);
-        imgPlay = (ImageView) findViewById(R.id.imageviewPlay);
-        imgPause = (ImageView) findViewById(R.id.imageviewPause);
-        // 实例化tempHeros
-        tempHeros = new ArrayList<Hero>();
-
-        // 打开一个进度条对话框，显示当前正在加载数据
-        dialog = new ProgressDialog(this);
-        dialog.setTitle("系统提示");
-        dialog.setMessage("数据加载中，请稍候...");
-        // 显示对话框
-        dialog.show();
+    private void initView() {
+        initBanner();
+        initTabLayout();
+        initFragment();
+        title.setBackgroundColor(Color.argb((int) 150, 0, 0, 0));
+        titleBarTitle.setTextColor(Color.argb((int) 255, 198, 166, 102));
+        titleBarContent.setTextColor(Color.argb((int) 255, 198, 166, 102));
+        initOnClickScroll();
+        initSwipeRefresh();
+    }
+    /*刷新监听*/
+    private void initSwipeRefresh() {
+//        srl.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+//            @Override
+//            public void onRefresh() {
+//                srl.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        srl.setRefreshing(false);
+//                    }
+//                }, 2000);
+//            }
+//        });
     }
 
-    private void setListener() {
-        imgType.setOnClickListener(new View.OnClickListener() {
+    /*滚动监听*/
+    private void initOnClickScroll() {
+        scrollablelayout.setOnScrollListener(new ScrollableLayout.OnScrollListener() {
             @Override
-            public void onClick(View v) {
-                View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.herotype_dialog, null);
-                ListView lvType = (ListView) view.findViewById(R.id.listViewHeroDialog);
+            public void onScroll(int i, int i1) {
+                float scale = (float) i1 - i;
+                float alpha = (255 * scale);
+                float alpha2 = scale / i1 * 150;
+                float alphaTv = scale / i1 * 250;
+                float alpha3 = (float) i / i1 * 130;
 
-                String[] types = { "全部英雄", "战士", "法师", "刺客", "坦克", "射手", "辅助" };
-                ArrayAdapter<String> typeAdapter = new ArrayAdapter<String>(MainActivity.this,
-                        android.R.layout.simple_list_item_1, types);
-                lvType.setAdapter(typeAdapter);
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("英雄分类");
-                builder.setView(view);
-                final AlertDialog typeDialog = builder.create();
-                typeDialog.show();
-                // 注册listview项的点击事件
-                lvType.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                float alphaTop = (float) i / i1 * 150;
+                LinearLayout.LayoutParams lp = new
+                        LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
 
-                    @Override
-                    public void onItemClick(AdapterView<?> arg0, View arg1, int position, long arg3) {
-                        // 获得指定类型英雄的信息
-                        getHeroByPosition(position);
-                        // tempHeros已经封装了所有符合的英雄信息
-                        // 重新设置adapter中的数据
-                        adapter = new HeroAdapter(MainActivity.this, tempHeros);
-                        // 重新设置一个适配器
-                        gvLogo.setAdapter(adapter);
-                        typeDialog.dismiss();
-                    }
-                });
+                lp.setMargins(0, (int) alphaTop, 0, 0);
+
+                tab.setLayoutParams(lp);
+                if (i == i1) {
+//                    title.setVisibility(View.GONE);
+                    titleBarTitle.setText("动态列表");
+                    titleBarTitle.setTextColor(Color.GREEN);
+                } else if (i < i1) {
+                    titleBarTitle.setText("英雄联盟");
+                    titleBarTitle.setTextColor(Color.argb((int) 255, 198, 166, 102));
+                }
+                if (i < i1) {
+                    title.setVisibility(View.VISIBLE);
+                }
+
+
+                //img设置渐变
+                float f = (float) i / i1; //0-1递增
+                float f1 = scale / i1;   //1-0递减
+                titleBarBack.setAlpha(f1);
+
+//                0-100递增偏移量
+                titleBarBack.scrollTo((int) alpha3, 0);
+                Log.e("aaa======", i + "    ,alpha:" + alpha + "     ,alpha2:" + alpha2 + "  ,alpha3:" + alpha3 + "    ,alphaTop:" + alphaTop);
+//                titleBarBack.setPadding((int) scale / i1 * 100, 12, 0, 8);
+                //通过距离设置渐变效果
+                title.setBackgroundColor(Color.argb((int) alpha2, 0, 0, 0));
+                titleBarTitle.setTextColor(Color.argb((int) alphaTv - 1, 198, 166, 102));
+                titleBarContent.setTextColor(Color.argb((int) alphaTv, 198, 166, 102));
+
             }
         });
-        // 模糊查询
-        buttonQuery.setOnClickListener(new View.OnClickListener() {
+    }
 
+    /*初始化Fragment*/
+    private void initFragment() {
+
+        fragment = new ScrollableFragment();
+        ScrollableFragment fragment1 = new ScrollableFragment();
+        ScrollableFragment fragment2 = new ScrollableFragment();
+        ScrollableFragment fragment3 = new ScrollableFragment();
+        ScrollableFragment fragment4 = new ScrollableFragment();
+        ScrollableFragment fragment5 = new ScrollableFragment();
+        ScrollableFragment fragment6 = new ScrollableFragment();
+        fragmentList.add(fragment);
+        fragmentList.add(fragment1);
+        fragmentList.add(fragment2);
+        fragmentList.add(fragment3);
+        fragmentList.add(fragment4);
+        fragmentList.add(fragment5);
+        fragmentList.add(fragment6);
+        adapterVP = new ViewPagerAdapter(getSupportFragmentManager());
+        vp.setAdapter(adapterVP);
+        tab.setupWithViewPager(vp);
+
+
+    }
+
+    /*通过Fragmenbt的滚动距离回调
+    * 注意：这里只能处理当ScrollLayout完全隐藏后，Fragment的ScrollView才能开始滚动事件，
+    * 上滑的时候却优先执行ScrollLayout的方法
+     */
+
+    public void getonScroll(int i) {
+        Log.e("activity======I:", "i:" + i);
+//        srl.setEnabled(i<450);
+
+        if (i > 700) {
+            headerTitle.setAnimation(mHiddenAction);
+            headerTitle.setVisibility(View.GONE);
+        }
+        if (i < 450) {
+            headerTitle.setAnimation(mShowAction);
+            headerTitle.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /*初始化tab标签*/
+    private void initTabLayout() {
+
+        for (int i = 0; i < titles.length; i++) {
+            tab.addTab(tab.newTab().setText(titles[i]));
+        }
+
+    }
+
+    /*轮播*/
+    private void initBanner() {
+        //圆形指示器
+        header.setBannerStyle(BannerConfig.CIRCLE_INDICATOR);
+        //指示器居中
+        header.setIndicatorGravity(BannerConfig.CENTER);
+        img.add("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1531819690862&di=f785d565f3b6be333fe28e73a6292ade&imgtype=0&src=http%3A%2F%2Fpic113.nipic.com%2Ffile%2F20161030%2F4369400_200924059000_2.jpg");
+        img.add("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1531818388103&di=2fcd43edbe150efbc1d0e580479de914&imgtype=0&src=http%3A%2F%2Fimg5.duitang.com%2Fuploads%2Fitem%2F201404%2F21%2F20140421212748_iLfTB.jpeg");
+        img.add("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1531818455222&di=defbc4af47accb9700ee91b28bcd9f57&imgtype=0&src=http%3A%2F%2Fpic.qiantucdn.com%2F58pic%2F19%2F64%2F90%2F56fe106233eee_1024.jpg");
+        header.setImageLoader(new ImageLoader() {
             @Override
-            public void onClick(View v) {
-                String name = etQuery.getText().toString().trim();
-                getHeroByName(name);
-                // 把适配器中的集合进行更新
-                adapter = new HeroAdapter(MainActivity.this, tempHeros);
-                // 重新设置一个适配器
-                gvLogo.setAdapter(adapter);
+            public void displayImage(Context context, Object o, ImageView imageView) {
+                for(String url:img) {
+                    Picasso.with(context)
+                            .load(url)
+                            .into(imageView);
+                }
             }
         });
-        // 音乐播放
-        imgPlay.setOnClickListener(new View.OnClickListener() {
+        header.setImages(img);
+        header.start();
+    }
 
-            @Override
-            public void onClick(View v) {
-                imgPlay.setVisibility(View.GONE);
-                imgPause.setVisibility(View.VISIBLE);
-                // 音乐开启
-                media.start();
-            }
-        });
-        // 音乐停止
-        imgPause.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                imgPlay.setVisibility(View.VISIBLE);// 播放显示
-                imgPause.setVisibility(View.GONE); // 暂停隐藏
-                // 音乐停止
-                media.pause();
-            }
-        });
-        gvLogo.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> arg0,
-                                    View arg1, int position, long arg3) {
-                // 获得选择的英雄对象
-                Hero hero = (Hero) adapter.getItem(position);
-                // 实现activity对象的跳转
-                Intent intent = new Intent(MainActivity.this, HeroMessActivity.class);
-                // 传载Serializable对象，把序列化特性的hero对象传给下一个activity
-                intent.putExtra("hero", hero);
+    @OnClick({R.id.title_bar_back, R.id.title_bar_content})
+    public void onViewClicked(View view) {
+        switch (view.getId()) {
+            case R.id.title_bar_back:
+                break;
+            case R.id.title_bar_content:
+                Intent intent = new Intent(this, HeroActivity.class);
                 startActivity(intent);
-            }
-
-        });
-    }
-
-    private void getHeroByName(String name) {
-        tempHeros.clear();
-        for (int i = 0; i < heros.size(); i++) {
-            Hero hero = heros.get(i);
-            if (hero.getName().contains(name)) {
-                // 把符合条件的英雄添加到集合中
-                tempHeros.add(hero);
-            }
+                break;
         }
     }
 
-    private void getHeroByPosition(int position) {
-        tempHeros.clear();
-        if (position == 0) {
-            // 查找所有的英雄
-            tempHeros.addAll(heros);
-        } else {
-            // 按指定类型查
-            for (int i = 0; i < heros.size(); i++) {
-                if (position == Integer.parseInt(heros.get(i).getType())) {
-                    tempHeros.add(heros.get(i));
-                }
-            }
+    class ViewPagerAdapter extends FragmentPagerAdapter {
+        public ViewPagerAdapter(FragmentManager fm) {
+            super(fm);
         }
-    }
 
-    Handler handler = new Handler() {
-        public void handleMessage(Message msg) {
-            heros = (List<Hero>) msg.obj;// 获得从工作子线程中加载完成后传回的集合
-            adapter = new HeroAdapter(MainActivity.this, heros);
-            gvLogo.setAdapter(adapter);
-            // 关闭对话框
-            dialog.dismiss();
-        };
-    };
-
-    // XML构造与解析
-    class HeroThread extends Thread {
         @Override
-        public void run() {
-            // 执行数据创建和解析
-            XMLManager manager = new XMLManager(MainActivity.this);
-            try {
-                String strXml = manager.createXML();
-                heros = manager.parseXML(strXml);
-                // 从消息值中拿一个空闲可用的消息
-                Message msg = handler.obtainMessage();
-                // 把数据封装到消息中
-                msg.obj = heros;
-                // 当数据加载完成后发消息给主线程
-                handler.sendMessage(msg);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        public Fragment getItem(int position) {
+            return fragmentList.get(position);
         }
-    }
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        // 点击回退键，进行判断
-        if (keyCode == KeyEvent.KEYCODE_BACK){
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("系统提示");
-            builder.setMessage("确定要退出当前应用？");
-            builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
-
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    media.stop();
-                    finish();
-                }
-            });
-            builder.setNegativeButton("取消", null);
-            builder.create().show();
-
+        @Override
+        public int getCount() {
+            return fragmentList.size();
         }
-        return super.onKeyDown(keyCode, event);
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return titles[position];
+        }
     }
 }
