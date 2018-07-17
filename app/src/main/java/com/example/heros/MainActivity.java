@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -56,6 +57,7 @@ public class MainActivity extends Activity {
     }
 
     private void initialUI(){
+        media = new HeroMedia(MainActivity.this);
         gvLogo = (GridView) findViewById(R.id.gridview_logo);
         imgType = (ImageView)findViewById(R.id.imageviewDialog);
         buttonQuery = (Button) findViewById(R.id.buttonSousuo);
@@ -227,7 +229,9 @@ public class MainActivity extends Activity {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     media.stop();
+                    Log.i("tag","media stoped");
                     finish();
+                    Log.i("tag","finished");
                 }
             });
             builder.setNegativeButton("取消", null);
